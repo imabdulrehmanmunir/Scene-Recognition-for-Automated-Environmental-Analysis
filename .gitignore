@@ -1,0 +1,2 @@
+echo "*.h5" > .gitignore
+echo "*.keras" >> .gitignore
