@@ -63,7 +63,7 @@
         
         <div class="glass-panel inline-flex items-center gap-4 px-6 py-3 rounded-full border border-slate-700 shadow-lg">
             <!-- Ensure you replace YOUR_IMAGE_LINK_HERE.jpg with an actual image URL if you have one! -->
-            <img src="./abdulrehmanmunir.jpg" alt="Abdulrehman Munir" class="w-12 h-12 rounded-full object-cover border-2 border-neonCyan bg-slate-800" onerror="this.src='https://ui-avatars.com/api/?name=Abdulrehman+Munir&background=0D8ABC&color=fff'">
+            <img src="/abdulrehmanmunir.jpg" alt="Abdulrehman Munir" class="w-12 h-12 rounded-full object-cover border-2 border-neonCyan bg-slate-800" onerror="this.src='https://ui-avatars.com/api/?name=Abdulrehman+Munir&background=0D8ABC&color=fff'">
             <div class="text-left">
                 <h3 class="font-bold text-white leading-tight">Abdulrehman Munir</h3>
                 <p class="text-xs text-neonCyan tracking-wider">Roll No: SU92-BSCSM-F23-453</p>
@@ -189,6 +189,157 @@
             </div>
         </div>
     </main>
+
+    <script>
+        function toggleDropdown() {
+            const content = document.getElementById('dropdown-content');
+            const icon = document.getElementById('dropdown-icon');
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('upload-placeholder');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            document.getElementById('scratch-bar').style.width = '0%';
+            document.getElementById('transfer-bar').style.width = '0%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if(data.error) throw new Error(data.error);
+
+                document.getElementById('scratch-class').innerText = data.scratch.prediction;
+                document.getElementById('scratch-conf-text').innerText = data.scratch.confidence + '%';
+                
+                document.getElementById('transfer-class').innerText = data.transfer.prediction;
+                document.getElementById('transfer-conf-text').innerText = data.transfer.confidence + '%';
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('results').classList.remove('hidden');
+                
+                setTimeout(() => {
+                    document.getElementById('scratch-bar').style.width = data.scratch.confidence + '%';
+                    document.getElementById('transfer-bar').style.width = data.transfer.confidence + '%';
+                }, 50);
+                
+            } catch (error) {
+                alert("Error making prediction: " + error.message);
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+    </script>
+
+        <!-- Comparative Architecture Analysis Section -->
+    <section class="w-full max-w-5xl mt-12 mb-12">
+        <div class="glass-panel rounded-2xl p-8 shadow-xl border border-slate-700">
+            <div class="flex items-center gap-3 mb-6">
+                <i class="fa-solid fa-scale-balanced text-3xl text-neonCyan"></i>
+                <h2 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Comparative Architecture Analysis</h2>
+            </div>
+            
+            <p class="text-slate-300 mb-8 leading-relaxed text-sm md:text-base">
+                To evaluate environmental scene classification thoroughly, this project contrasted a bespoke architecture trained completely from scratch against a state-of-the-art pre-trained transfer learning model. Below is the technical breakdown of their trade-offs across computational complexity, feature extraction capability, and inference behavior.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Custom CNN Details -->
+                <div class="bg-slate-900/70 p-6 rounded-xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-microchip text-slate-400"></i> Custom CNN (Scratch)
+                            </h3>
+                            <span class="text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Baseline</span>
+                        </div>
+                        <ul class="space-y-3 text-slate-300 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>Sequential Structure:</strong> Built with custom stacked Conv2D layers, MaxPooling, and Dropout regularization.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>Learning Dynamics:</strong> Learns hierarchical edge-to-shape feature detectors purely from target environmental images without external priors.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>Resource Profile:</strong> Requires significantly higher epoch iterations and higher memory overhead during backpropagation.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                        <span>Weights File: <code class="text-neonCyan">model_scratch.h5</code></span>
+                        <span>Export: <code class="text-neonCyan">model_scratch.tflite</code></span>
+                    </div>
+                </div>
+
+                <!-- MobileNetV2 Details -->
+                <div class="bg-slate-900/70 p-6 rounded-xl border border-slate-800 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-neonCyan"></i> MobileNetV2 (Transfer)
+                            </h3>
+                            <span class="text-xs px-3 py-1 rounded-full bg-cyan-500/10 text-neonCyan border border-cyan-500/30">Optimized</span>
+                        </div>
+                        <ul class="space-y-3 text-slate-300 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>Inverted Residuals:</strong> Utilizes lightweight depthwise separable convolutions to dramatically cut parameter counts.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>ImageNet Priors:</strong> Inherits robust pre-trained feature extractors, allowing rapid convergence and superior generalization on complex textures.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-neonCyan mt-1"></i>
+                                <span><strong>Inference Speed:</strong> Delivers lower latency and higher confidence stability across ambiguous outdoor environments (e.g., forests vs. mountains).</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                        <span>Weights File: <code class="text-neonCyan">transfer_weights.weights.h5</code></span>
+                        <span>Export: <code class="text-neonCyan">model_transfer.tflite</code></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Table Bar -->
+            <div class="mt-8 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-around items-center text-center gap-4 text-sm text-slate-300">
+                <div>
+                    <span class="block text-xs text-slate-400">Target Categories</span>
+                    <strong class="text-white text-base">6 Environmental Classes</strong>
+                </div>
+                <div class="hidden sm:block w-px h-8 bg-slate-800"></div>
+                <div>
+                    <span class="block text-xs text-slate-400">Model Compression</span>
+                    <strong class="text-neonCyan text-base">3× Reduction via TFLite</strong>
+                </div>
+                <div class="hidden sm:block w-px h-8 bg-slate-800"></div>
+                <div>
+                    <span class="block text-xs text-slate-400">Production Runtime</span>
+                    <strong class="text-emerald-400 text-base">Python 3.11 / Render Linux</strong>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <script>
         function toggleDropdown() {
